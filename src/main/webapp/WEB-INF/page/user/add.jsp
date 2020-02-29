@@ -22,7 +22,7 @@
             <%--注册是默认是普通用户--%>
             <input type="hidden" name="level" value="0">
             <%--注册默认是未激活的--%>
-            <input type="hidden" name="isActive" value="1">
+            <input type="hidden" name="isActive" value="0">
             <input type="button" value="注册" onclick="add()">
         </form>
 

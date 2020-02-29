@@ -21,6 +21,19 @@
 
     <dependencies>
 
+        <dependency>
+            <groupId>org.apache.shiro</groupId>
+            <artifactId>shiro-spring-boot-starter</artifactId>
+            <version>1.4.2</version>
+        </dependency>
+
+        <!-- Shiro WEB 项目依赖 -->
+        <dependency>
+            <groupId>org.apache.shiro</groupId>
+            <artifactId>shiro-spring-boot-web-starter</artifactId>
+            <version>1.4.2</version>
+        </dependency>
+
         <!-- md5依赖 -->
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -110,6 +123,7 @@
                 </exclusion>
             </exclusions>
         </dependency>
+
     </dependencies>
 
     <build>
