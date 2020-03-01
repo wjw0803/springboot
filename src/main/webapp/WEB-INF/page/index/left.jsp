@@ -12,7 +12,7 @@
 			<a href="<%=request.getContextPath() %>/user/toShow?token=${token}" target="right">用户展示</a><br/>
 --%>
 
-<a href="<%=request.getContextPath()%>/user/toShow" target="right">展示</a>
+<a href="<%=request.getContextPath()%>/user/toShow" target="right">用户管理</a>
 
 </body>
 </html>

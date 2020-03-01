@@ -33,4 +33,17 @@ public class UserPageController {
         return "redirect:toLogin";
     }
 
+    //去用户展示页面
+    @RequestMapping("toShow")
+    public String toShow(){
+        return "/user/show";
+    }
+
+    //去升级vip页面
+    @RequestMapping("toTopVip")
+    public String toTopVip(){
+        return "/user/top_vip";
+    }
+
+
 }

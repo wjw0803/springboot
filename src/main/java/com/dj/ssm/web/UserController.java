@@ -15,6 +15,8 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+import java.util.List;
 
 @RestController
 @RequestMapping("/user/")
@@ -102,6 +104,25 @@ public class UserController {
         }
 
     }
+
+    @PostMapping("show")
+    public ResultModel<Object> show(HttpSession session){
+        try {
+            /* 0:普通用户1:vip2:管理员*/
+            User user = (User) session.getAttribute("user");
+            //普通用户和管理员展示只可以看到自己的
+            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+            if(user.getLevel() == 0 || user.getLevel() == 1){
+                queryWrapper.eq("id",user.getId());
+            }
+            List<User> list = userService.list(queryWrapper);
+            return new ResultModel<>().success(list);
+        }catch (Exception e){
+            e.printStackTrace();
+            return new ResultModel<>().error("有异常"+e.getMessage());
+        }
+    }
+
 
 
 }
