@@ -4,9 +4,12 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.springframework.util.StringUtils;
+
+import java.util.Date;
 
 @Data
 @Accessors(chain = true)
@@ -36,10 +39,15 @@ public class User {
     /*0:日/vip,月/vip,年/vip*/
     private Integer vipType;
 
-    private String vipVolidateTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    private Date vipVolidateTime;
 
     @TableField(exist = false)
     private String userPhoneShow;
+
+    public void setUserPhoneShow(String userPhoneShow) {
+        this.userPhoneShow = userPhoneShow;
+    }
 
     public String getUserPhoneShow() {
         if(StringUtils.isEmpty(phone)){
@@ -47,4 +55,27 @@ public class User {
         }
         return phone.replace(phone.substring(3,7),"****");
     }
+
+    @TableField(exist = false)
+    private String levelShow;
+
+    public String getLevelShow() {
+        if(StringUtils.isEmpty(level)){
+            return "无";
+        }
+        if(level == 0){
+            return "普通用户";
+        }else if(level ==1 && System.currentTimeMillis() < vipVolidateTime.getTime() ){
+            return "vip";
+        }else if(level == 2){
+            return "管理员";
+        }
+        return levelShow;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+
 }

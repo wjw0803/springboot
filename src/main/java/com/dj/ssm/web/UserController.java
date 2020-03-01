@@ -1,6 +1,10 @@
 package com.dj.ssm.web;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.Update;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dj.ssm.pojo.ResultModel;
 import com.dj.ssm.pojo.User;
 import com.dj.ssm.service.UserService;
@@ -16,7 +20,10 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/user/")
@@ -106,23 +113,83 @@ public class UserController {
     }
 
     @PostMapping("show")
-    public ResultModel<Object> show(HttpSession session){
+    public ResultModel<Object> show(HttpSession session, String phone, String isActive, Integer pageNo){
         try {
+            Map<String, Object> resultMap = new HashMap<>();
+            //Mp地分页对象
+            IPage<User> page = new Page<>(pageNo, 2);
             /* 0:普通用户1:vip2:管理员*/
             User user = (User) session.getAttribute("user");
+            //如果登陆用户是vip但是它的vip时间超时则修改它的level
+            if(user.getLevel() == 1 && System.currentTimeMillis() > user.getVipVolidateTime().getTime()){
+                user.setLevel(0);
+                user.setId(user.getId());
+                userService.updateById(user);
+            }
             //普通用户和管理员展示只可以看到自己的
             QueryWrapper<User> queryWrapper = new QueryWrapper<>();
             if(user.getLevel() == 0 || user.getLevel() == 1){
                 queryWrapper.eq("id",user.getId());
             }
+            //手机号模糊查
+            if(!StringUtils.isEmpty(phone)){
+                queryWrapper.like("phone",phone);
+            }
+            //单选按钮查询
+            if(!StringUtils.isEmpty(isActive)){
+                queryWrapper.eq("is_active",isActive);
+            }
             List<User> list = userService.list(queryWrapper);
-            return new ResultModel<>().success(list);
+            IPage<User> allRoles = userService.getAllRoles((Page<User>) page, queryWrapper);
+            return new ResultModel<>().success(allRoles);
         }catch (Exception e){
             e.printStackTrace();
             return new ResultModel<>().error("有异常"+e.getMessage());
         }
     }
 
+    //购买vip方法
+    @PutMapping("buyVip")
+    public ResultModel<Object> buyVip(User user,String code, HttpSession session){
+        try {
+            //判断非空
+            if(StringUtils.isEmpty(user.getVipType()) || StringUtils.isEmpty(code) ){
+                return new ResultModel<>().error("vip类型或图形验证码不可为空");
+            }
+            User user1 = (User) session.getAttribute("user");
+            Calendar calendar = Calendar.getInstance();
+            //如果选则的日vip则vip失效时间加1天
+            if(user.getVipType() == 0){
+                calendar.add(Calendar.DATE,1);
+            }
+            //如果选则的是月vip则vip失效时间加1月
+            if(user.getVipType() == 1){
+                calendar.add(Calendar.MONTH,1);
+            }
+            //如果选则的是年vip则vip失效时间加1年
+            if(user.getVipType() == 2){
+                calendar.add(Calendar.YEAR,1);
+            }
+            user.setVipVolidateTime(calendar.getTime());
+            user.setId(user1.getId());
+            user.setLevel(1);
+            userService.updateById(user);
+            return new ResultModel<>().success();
+        }catch (Exception e){
+            return new ResultModel<>().error(e.getMessage());
+        }
+
+    }
+
+
+    //volidate注册用户名去重
+    @RequestMapping("findByName")
+    public Boolean findByName(String userName){
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_name",userName);
+        User user = userService.getOne(queryWrapper);
+        return user == null ? true : false;
+    }
 
 
 }

@@ -61,6 +61,7 @@ public class ShiroConfiguration {
         filters.put("/static/res/md5/**", "anon"); // anon 表示不需要认证
         filters.put("/user/toAdd", "anon"); // anon 表示不需要认证
         filters.put("/user/add", "anon"); // anon 表示不需要认证
+        filters.put("/user/findByName", "anon"); // anon 表示不需要认证
         filters.put("/**", "authc"); // authc 表示必须认证才可访问
         shiroFilterFactoryBean.setFilterChainDefinitionMap(filters);
         return shiroFilterFactoryBean;
