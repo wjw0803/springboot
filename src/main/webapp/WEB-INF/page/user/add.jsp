@@ -28,6 +28,8 @@
             <input type="hidden" name="level" value="0">
             <%--注册默认是未激活的--%>
             <input type="hidden" name="isActive" value="0">
+            <%--注册默认未领取过新人福利--%>
+            <input type="hidden" name="isGetMoney" value="0">
             <input type = "submit">
         </form>
 

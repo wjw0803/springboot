@@ -1,17 +1,22 @@
 package com.dj.ssm.config;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.dj.ssm.pojo.Resource;
 import com.dj.ssm.pojo.ResultModel;
 import com.dj.ssm.pojo.User;
+import com.dj.ssm.service.ResourceService;
 import com.dj.ssm.service.UserService;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.*;
 import org.apache.shiro.authz.AuthorizationInfo;
+import org.apache.shiro.authz.SimpleAuthorizationInfo;
 import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.session.Session;
 import org.apache.shiro.subject.PrincipalCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
 
 /**
  * 自定义Realm
@@ -23,9 +28,21 @@ public class ShiroRealm extends AuthorizingRealm {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private ResourceService resourceService;
+
     @Override
     protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principalCollection) {
-        return null;
+        // 创建简单授权信息
+        SimpleAuthorizationInfo simpleAuthorInfo = new SimpleAuthorizationInfo();
+//        simpleAuthorInfo.addStringPermission("resource:add");
+        //获取当前登录用户的信息
+        Session session = SecurityUtils.getSubject().getSession();
+        List<Resource> resourceList = (List<Resource>) session.getAttribute("resourceList");
+        for (Resource resource: resourceList) {
+            simpleAuthorInfo.addStringPermission(resource.getUrl());
+        }
+        return simpleAuthorInfo;
     }
 
 
@@ -62,6 +79,8 @@ public class ShiroRealm extends AuthorizingRealm {
             Session session = SecurityUtils.getSubject().getSession();
             //存session用户
             session.setAttribute("user",user1);
+            //登陆成功时将对应用户的资源权限存入session中
+            session.setAttribute("resourceList",resourceService.findUserResource(user1.getId()));
         }catch (Exception e){
             throw new AccountException(e.getMessage());
         }

@@ -1,5 +1,6 @@
 <%@ page import="java.util.Date" %>
 <%@ taglib prefix="C" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="shiro" uri="http://shiro.apache.org/tags" %>
 <%--
   Created by IntelliJ IDEA.
   User: dj
@@ -9,6 +10,7 @@
 --%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib prefix="shirp" uri="http://shiro.apache.org/tags" %>
 <script type="text/javascript" src="<%=request.getContextPath()%>/static/res/js/jquery-1.12.4.min.js"></script>
 <html>
 <head>
@@ -25,9 +27,17 @@
 
         <input type="button" value="查询" onclick="search()">
 
-        <input type="button" value="充值vip" onclick="topVip()">
-
-        <input type="button" value="我要租车" onclick="borrow()">
+        <shiro:hasPermission name="user:chong">
+          <input type="button" value="账户充值" onclick="toChong()">
+        </shiro:hasPermission>
+        
+        <shiro:hasPermission name="user:chongvip">
+           <input type="button" value="充值vip" onclick="topVip()">
+        </shiro:hasPermission>
+        
+        <shiro:hasPermission name="user:borcar">
+          <input type="button" value="我要租车" onclick="borrow()">
+        </shiro:hasPermission>
 
         <table>
             <tr>
@@ -38,7 +48,9 @@
                 <th>手机号</th>
                 <th>激活状态</th>
                 <th>等级</th>
-                <C:if test="${user.level == 1 || user.level == 2}"><th>vip失效时间</th></C:if>
+               <th>vip失效时间</th>
+                <th>账户余额</th>
+                <th>操作</th>
             </tr>
             <tbody id="tb">
 
@@ -80,6 +92,22 @@
                         html += "<td>"+u.levelShow+"</td>";
                         if(u.level == 1){
                             html += "<td>"+u.vipVolidateTime+"</td>";
+                        }else if(u.vipVolidateTime == null){
+                            html += "<td>暂未开通vip</td>";
+                        }
+                        if(${user.level == 0 } || ${user.level == 1}){
+                            if(u.accountMoney == null){
+                                html += "<td><font color='red' '>账户充值有新人福利哦</font></td>";
+                            }else{
+                                html += "<td>"+u.accountMoney+"</td>";
+                            }
+                        }else if(u.accountMoney == null){
+                            html += "<td>无金额</td>";
+                        }else{
+                            html += "<td>"+u.accountMoney+"</td>";
+                        }
+                        if(${user.level != 2}){
+                             html += "<td><input type='button' value='设置支付密码' onclick='setPayPwd("+u.id+")'></td>";
                         }
                         html += "</tr>";
                     }
@@ -118,6 +146,17 @@
         //去租车页面
         function borrow() {
             window.location.href = "<%=request.getContextPath()%>/user/toBorrowCar";
+        }
+
+        //去设置支付密码
+        function setPayPwd(id) {
+            alert(id)
+            window.location.href = "<%=request.getContextPath()%>/user/setPayPwd/"+id;
+        }
+
+        //去充值页面
+        function toChong() {
+           window.location.href = "<%=request.getContextPath()%>/user/toChong";
         }
 
 </script>

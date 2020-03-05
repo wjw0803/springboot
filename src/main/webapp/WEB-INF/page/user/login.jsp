@@ -19,6 +19,7 @@
     用户名/手机号/邮箱<input type = "text" name="userName"><br/>
     密码<input type = "password" name="pwd" id = "aa"><br/>
     <input type="button" value="登陆" onclick="login()">
+    <input type="button" value="注册" onclick="add()">
 
 </form>
 
@@ -45,6 +46,17 @@
 
             });
     }
+
+    function add() {
+        window.location.href = "<%=request.getContextPath()%>/user/toAdd";
+    }
+
+    //判断当前窗口路径与加载路径是否一致。
+    if(window.top.document.URL != document.URL){
+        //将窗口路径与加载路径同步
+        window.top.location = document.URL;
+    }
+
 
 </script>
 </html>

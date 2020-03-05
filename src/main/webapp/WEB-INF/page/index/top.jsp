@@ -10,7 +10,7 @@
 <body>
 
 
-<h1 align="center">欢迎${user.userName}登陆</h1>
+<h1 align="center">欢迎${user.userName}登陆神州租车网</h1>
 
 <a href="<%=request.getContextPath() %>/user/exitLoginUser">退出登录</a>
 

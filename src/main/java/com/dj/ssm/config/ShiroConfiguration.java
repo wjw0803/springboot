@@ -59,6 +59,7 @@ public class ShiroConfiguration {
         filters.put("/static/res/**", "anon"); // anon 表示不需要认证
         filters.put("/static/res/js/**", "anon"); // anon 表示不需要认证
         filters.put("/static/res/md5/**", "anon"); // anon 表示不需要认证
+        filters.put("/static/res/img/**", "anon"); // anon 表示不需要认证
         filters.put("/user/toAdd", "anon"); // anon 表示不需要认证
         filters.put("/user/add", "anon"); // anon 表示不需要认证
         filters.put("/user/findByName", "anon"); // anon 表示不需要认证

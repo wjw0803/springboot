@@ -7,8 +7,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.dj.ssm.pojo.ResultModel;
 import com.dj.ssm.pojo.User;
+import com.dj.ssm.pojo.UserRole;
+import com.dj.ssm.service.UserRoleService;
 import com.dj.ssm.service.UserService;
 import com.dj.ssm.utils.JavaEmailUtils;
+import com.dj.ssm.utils.MessageVerifyUtils;
 import com.dj.ssm.utils.PasswordSecurityUtil;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.UsernamePasswordToken;
@@ -31,6 +34,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserRoleService userRoleService;
 
     //注册方法
     @PostMapping("add")
@@ -60,6 +66,13 @@ public class UserController {
             String password = PasswordSecurityUtil.generatePassword(user.getPwd(), salt);
             user.setPwd(password);
             userService.save(user);
+            /**
+             * 注册完成后给user_role(用户角色)表新增
+             */
+            UserRole userRole = new UserRole();
+            userRole.setUserId(user.getId());
+            userRole.setRoleId(0);
+            userRoleService.save(userRole);
             //用户注册完成后给注册邮箱发送链接
             String content = "<a href = 'http://192.168.47.1:8080"+request.getContextPath()+"/user/upd2?id="+user.getId()+"&isActive=1'>点此激活</a>";
             JavaEmailUtils.sendEmail(user.getEmail(),"用户激活",content);
@@ -121,12 +134,14 @@ public class UserController {
             /* 0:普通用户1:vip2:管理员*/
             User user = (User) session.getAttribute("user");
             //如果登陆用户是vip但是它的vip时间超时则修改它的level
-            if(user.getLevel() == 1 && System.currentTimeMillis() > user.getVipVolidateTime().getTime()){
-                user.setLevel(0);
-                user.setId(user.getId());
-                userService.updateById(user);
+            if(null != user.getVipVolidateTime()){
+                if(user.getLevel() == 1 &&  System.currentTimeMillis() > user.getVipVolidateTime().getTime()){
+                    user.setLevel(0);
+                    user.setId(user.getId());
+                    userService.updateById(user);
+                }
             }
-            //普通用户和管理员展示只可以看到自己的
+            //普通用户和vip展示只可以看到自己的
             QueryWrapper<User> queryWrapper = new QueryWrapper<>();
             if(user.getLevel() == 0 || user.getLevel() == 1){
                 queryWrapper.eq("id",user.getId());
@@ -150,30 +165,51 @@ public class UserController {
 
     //购买vip方法
     @PutMapping("buyVip")
-    public ResultModel<Object> buyVip(User user,String code, HttpSession session){
+    public ResultModel<Object> buyVip(User user,String tuCode, HttpSession session){
         try {
             //判断非空
-            if(StringUtils.isEmpty(user.getVipType()) || StringUtils.isEmpty(code) ){
+            if(StringUtils.isEmpty(user.getVipType()) || StringUtils.isEmpty(tuCode) ){
                 return new ResultModel<>().error("vip类型或图形验证码不可为空");
             }
             User user1 = (User) session.getAttribute("user");
+            //根据当前用户查询他此时的账户金额
+            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("id",user1.getId());
+            User user2 = userService.getOne(queryWrapper);
             Calendar calendar = Calendar.getInstance();
             //如果选则的日vip则vip失效时间加1天
             if(user.getVipType() == 0){
                 calendar.add(Calendar.DATE,1);
+                if(user2.getAccountMoney() - 3 < 0){
+                    return new ResultModel<>().error("账户余额不足请及时充值");
+                }
+                user.setAccountMoney(user2.getAccountMoney() - 3);
             }
             //如果选则的是月vip则vip失效时间加1月
             if(user.getVipType() == 1){
                 calendar.add(Calendar.MONTH,1);
+                if(user2.getAccountMoney() - 30 < 0){
+                    return new ResultModel<>().error("账户余额不足请及时充值");
+                }
+                user.setAccountMoney(user2.getAccountMoney() - 30);
             }
             //如果选则的是年vip则vip失效时间加1年
             if(user.getVipType() == 2){
                 calendar.add(Calendar.YEAR,1);
+                if(user2.getAccountMoney() - 256 < 0){
+                    return new ResultModel<>().error("账户余额不足请及时充值");
+                }
+                user.setAccountMoney(user2.getAccountMoney() - 256);
             }
             user.setVipVolidateTime(calendar.getTime());
-            user.setId(user1.getId());
+            user.setId(user2.getId());
             user.setLevel(1);
             userService.updateById(user);
+            //修改等级后对应的user_role(用户角色表)也要修改
+            UserRole userRole = new UserRole();
+            userRole.setUserId(user2.getId());
+            userRole.setRoleId(1);
+            userRoleService.save(userRole);
             return new ResultModel<>().success();
         }catch (Exception e){
             return new ResultModel<>().error(e.getMessage());
@@ -190,6 +226,81 @@ public class UserController {
         User user = userService.getOne(queryWrapper);
         return user == null ? true : false;
     }
+
+    //设置支付密码方法
+    @PutMapping("updPayPwd")
+    public ResultModel<Object> updPayPwd(User user){
+        userService.updateById(user);
+        return new ResultModel<>().success();
+    }
+
+    //领取新人福利
+    @PutMapping("getUserFu")
+    public ResultModel<Object> getUserFu(HttpSession session){
+        User user = (User) session.getAttribute("user");
+        if(user.getIsGetMoney() != null && user.getIsGetMoney() == 1){
+            return new ResultModel<>().error("您已领取过该福利");
+        }
+        user.setIsGetMoney(1);
+        user.setAccountMoney(Double.valueOf(5));
+        userService.updateById(user);
+        return new ResultModel<>().success();
+    }
+
+    //充值金额
+    @PutMapping("chongZhi")
+    public ResultModel<Object> chongZhi(User user,Double accountMoney,HttpSession session){
+        if(StringUtils.isEmpty(user.getCode()) || StringUtils.isEmpty(user.getPhone()) || StringUtils.isEmpty(accountMoney)){
+            return new ResultModel<>().error("手机号或验证码或充值金额不可为空");
+        }
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("phone",user.getPhone());
+        queryWrapper.eq("code",user.getCode());
+        User user2 = userService.getOne(queryWrapper);
+        if(user2 == null){
+            return new ResultModel<>().error("手机号或验证码错误");
+        }
+        if(System.currentTimeMillis() > user2.getValidateCodeTime().getTime()){
+            return new ResultModel<>().error("验证码已失效请重新获取");
+        }
+        User user1 = (User) session.getAttribute("user");
+        UpdateWrapper<User> updateWrapper = new UpdateWrapper<>();
+        //余额+又充值的钱
+        updateWrapper.set("account_money",user1.getAccountMoney() + accountMoney);
+        updateWrapper.eq("phone",user.getPhone());
+        userService.update(updateWrapper);
+        return new ResultModel<>().success();
+    }
+
+    //获取短信验证码
+    @PutMapping("getCode")
+    public ResultModel<Object> getCode(String phone){
+        try {
+            if(StringUtils.isEmpty(phone)){
+                return new ResultModel<>().error("请输入手机号");
+            }
+            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("phone",phone);
+            User user = userService.getOne(queryWrapper);
+            if(user == null){
+                return new ResultModel<>().error("手机号不存在");
+            }
+            int newCode = MessageVerifyUtils.getNewcode();
+            //设置短信验证码失效时间为1分钟
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.MINUTE, 1);
+            user.setValidateCodeTime(calendar.getTime());
+            user.setCode(String.valueOf(newCode));
+            MessageVerifyUtils.sendSms(phone,String.valueOf(newCode));
+            userService.updateById(user);
+            return new ResultModel<>().success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return new ResultModel<>().error(e.getMessage());
+        }
+
+    }
+
 
 
 }

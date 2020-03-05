@@ -12,7 +12,9 @@
 			<a href="<%=request.getContextPath() %>/user/toShow?token=${token}" target="right">用户展示</a><br/>
 --%>
 
-<a href="<%=request.getContextPath()%>/user/toShow" target="right">用户管理</a>
+<a href="<%=request.getContextPath()%>/user/toShow" target="right">用户管理</a><br/>
+<a href="<%=request.getContextPath()%>/order/toShow" target="right">我的订单</a><br/>
+<a href = "<%=request.getContextPath()%>/car/toShow" target="right">车辆管理</a>
 
 </body>
 </html>

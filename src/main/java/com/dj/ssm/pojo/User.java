@@ -65,7 +65,8 @@ public class User {
         }
         if(level == 0){
             return "普通用户";
-        }else if(level ==1 && System.currentTimeMillis() < vipVolidateTime.getTime() ){
+        }
+        if(level ==1 &&  System.currentTimeMillis() < vipVolidateTime.getTime() ){
             return "vip";
         }else if(level == 2){
             return "管理员";
@@ -77,5 +78,19 @@ public class User {
         return phone;
     }
 
+    private String payPwd;
+
+    /*账户余额*/
+    private Double accountMoney;
+
+
+    /*是否领取新人福利 0:未领取 1:已领取 */
+    private Integer isGetMoney;
+
+    /*短信验证码*/
+    private String code;
+
+    /*失效时间*/
+    private Date validateCodeTime;
 
 }

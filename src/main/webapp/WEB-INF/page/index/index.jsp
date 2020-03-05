@@ -10,7 +10,7 @@
 <frameset rows="20%,*">
     <frame src="<%=request.getContextPath()%>/index/toTop?token=${token}" name="top">
     <frameset cols="20%,*">
-        <frame src="<%=request.getContextPath()%>/index/toLeft?token=${token}" name="left">
+        <frame src="<%=request.getContextPath()%>/index/toMenu?token=${token}" name="left">
         <frame src="<%=request.getContextPath()%>/index/toRight?token=${token}" name="right">
     </frameset>
 </frameset>

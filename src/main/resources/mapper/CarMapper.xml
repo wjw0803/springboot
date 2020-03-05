@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.dj.ssm.mapper.CarMapper">
+
+
+    <insert id="addList">
+        insert  into  dj_car (car_name,car_type,money)
+            values <foreach collection="list" separator="," item="h">
+                (#{h.carName},#{h.carType},#{h.money})
+        </foreach>
+    </insert>
+
+    <update id="updCarIsDel">
+        update  dj_car set  is_del = #{isDel} where id in
+        <foreach collection="ids" separator="," open="(" close=")" item="id">
+            #{id}
+        </foreach>
+    </update>
+
+
+</mapper>

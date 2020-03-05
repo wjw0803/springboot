@@ -27,7 +27,7 @@
                 <option value="2">1年vip</option>
             </select><br/>
             <div id="v_container" style="width: 200px;height: 50px;"></div>
-            <input type="text" id="code_input" name="code" value="" placeholder="请输入验证码"/><button id="my_button">验证</button>
+            <input type="text" id="code_input" name="tuCode" value="" placeholder="请输入验证码"/><button id="my_button">验证</button>
             <input type="button" value="确认充值" onclick="buyVip()" >
         </form>
 
@@ -41,18 +41,20 @@
         document.getElementById("my_button").onclick = function(){
 
             var res = verifyCode.validate(document.getElementById("code_input").value);
-            alert(document.getElementById("code_input").value)
 
             if(res){
                 alert("验证正确");
             }else{
                 alert("验证码错误");
+                window.location.href = "<%=request.getContextPath()%>/user/toTopVip";
             }
         }
 
 
     //购买vip方法
     function buyVip() {
+
+            $("#my_button").trigger('click');
 
         $.post("<%=request.getContextPath()%>/user/buyVip",
 
